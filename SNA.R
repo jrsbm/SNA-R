@@ -28,6 +28,8 @@ p <- ggraph(g_bipartite, layout = "fr") +
   scale_fill_manual(values = c("FALSE" = "#0d0dbd", "TRUE" = "#067906"),
                     labels = c("Entity", "Group"), name = "Type") +
   scale_size_continuous(range = c(2, 10), name = "Degree") +
+  guides(fill = guide_legend(override.aes = list(size = 5)),
+         size = guide_legend(override.aes = list(fill = "black"))) +
   geom_node_text(aes(label = name, color = "#3490af"),
                  data = . %>% filter(type == TRUE),
                  repel = TRUE, size = 5, show.legend = FALSE) +

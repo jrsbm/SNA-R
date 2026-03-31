@@ -1,9 +1,11 @@
 library(tidyverse)
 library(igraph)
 library(ggraph)
+library(ggrepel)
+library(shadowtext)
 
 # Read csv
-d <- as_tibble(read.csv("biadjacency matrix.csv"))
+d <- as_tibble(read.csv("BiadjacencyMatrix.csv"))
 
 # Convert to matrix and assign row names
 matrix <- as.matrix(d[, 2:ncol(d)])
@@ -12,13 +14,8 @@ matrix[is.na(matrix)] <- 0
 
 # Graph
 g_bipartite <- graph_from_biadjacency_matrix(matrix)
-# Map size as degree or betweenness
-V(g_bipartite)$betweenness <- betweenness(g_bipartite,
-                                          weights = E(g_bipartite)$weight)
 
 set.seed(123)
-
-V(g_bipartite)$type2 <- ifelse(V(g_bipartite)$type, "red", "lightblue")
 
 # Plot
 p <- ggraph(g_bipartite, layout = "fr") +
@@ -30,14 +27,15 @@ p <- ggraph(g_bipartite, layout = "fr") +
   scale_size_continuous(range = c(2, 10), name = "Degree") +
   guides(fill = guide_legend(override.aes = list(size = 5)),
          size = guide_legend(override.aes = list(fill = "black"))) +
-  geom_node_text(aes(label = name, color = "#3490af"),
-                 data = . %>% filter(type == TRUE),
-                 repel = TRUE, size = 5, show.legend = FALSE) +
-  geom_node_text(aes(label = name, color = "#e21111"),
-                 data = . %>% filter(type == FALSE),
-                 repel = TRUE, size = 2, show.legend = FALSE) +
-  theme_graph() +
-  labs(title = "Network Graph")
+  geom_text_repel(aes(label = name, color = "#e00000", x = x, y = y),
+                  data = . %>% filter(type == FALSE),
+                  size = 2, show.legend = FALSE,
+                  box.padding = 0.1, max.overlaps = 5) +
+  geom_shadowtext(aes(label = name, color = "#3490af", x = x, y = y),
+                  data = . %>% filter(type == TRUE),
+                  repel = TRUE, size = 5, show.legend = FALSE,
+                  bg.colour = "white", nudge_x = 0.1) +
+  theme_graph()
 print(p, width = 16, height = 8, units = "in", dpi = 300)
 
 ggsave("SNA.png", plot = p, width = 16, height = 8, units = "in", dpi = 300)
